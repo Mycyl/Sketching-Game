@@ -9,7 +9,7 @@ import java.util.Scanner;
  * and receives responses.
  */
 public class Client {
-    private static final String SERVER_ADDRESS = "localhost"; // Server IP address or hostname
+    private static final String SERVER_ADDRESS = "192.168.85.160"; // Server IP address or hostname
     private static final int SERVER_PORT = 12345; // Server port number
 
     public static void main(String[] args) {
