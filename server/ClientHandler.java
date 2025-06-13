@@ -1,67 +1,98 @@
 package server;
 // --- Client.java ---
-
 import java.io.*;
 import java.net.*;
-import java.util.Scanner;
+import shared.*;
+import java.util.List;
 
-/**
- * A simple client that connects to a server, sends messages,
- * and receives responses.
- */
+public class ClientHandler extends Thread {
+    private Socket socket;
+    private ObjectInputStream in;
+    private ObjectOutputStream out;
+    private String username;
+    public GameRoom room;
 
- /**
- * Handles a single player's connection to the server.
- * Receives messages from the client and responds accordingly.
- * Forwards draw events, guesses, and chat to all connected clients.
- */
+    public ClientHandler(Socket socket) throws IOException {
+        this.socket = socket;
+        this.out = new ObjectOutputStream(socket.getOutputStream());
+        this.in = new ObjectInputStream(socket.getInputStream());
+    }
 
-// instance class
-// One instance per connected player; handles individual communication.
+    public void send(Message msg) throws IOException {
+        out.writeObject(msg);
+        out.flush();
+    }
 
-
-public class ClientHandler {
-    private static final String SERVER_ADDRESS = "localhost"; // Server IP address or hostname
-    private static final int SERVER_PORT = 12345; // Server port number
-
-    public static void main(String[] args) {
-        System.out.println("Connecting to server at " + SERVER_ADDRESS + ":" + SERVER_PORT + "...");
-        
-
-        // Use a try-with-resources statement to ensure the socket and streams are closed
-        try (Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
-             PrintWriter out = new PrintWriter(socket.getOutputStream(), true); // 'true' for auto-flush
-             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-             Scanner scanner = new Scanner(System.in)) { // For reading user input from console
-
-            System.out.println("Connected to the server. Type 'bye' to exit.");
-
-            String userInput;
-            String serverResponse;
-
-            // Loop to send messages and receive responses
+    public void run() {
+        try {
             while (true) {
-                System.out.print("Enter message: ");
-                userInput = scanner.nextLine(); // Read user input
-
-                out.println(userInput); // Send message to the server
-
-                // Read response from the server
-                serverResponse = in.readLine();
-                System.out.println("Server response: " + serverResponse);
-
-                // If the user types "bye", close the client connection
-                if ("bye".equalsIgnoreCase(userInput)) {
-                    break;
-                }
+                Message msg = (Message) in.readObject();
+                handle(msg);
             }
-
-        } catch (UnknownHostException e) {
-            System.err.println("Server not found: " + e.getMessage());
-        } catch (IOException e) {
-            System.err.println("I/O error: " + e.getMessage());
-        } finally {
-            System.out.println("Client disconnected.");
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+    }
+
+    private void handle(Message msg) throws IOException {
+        switch (msg.type) {
+            case CREATE_ROOM:
+                String code = (String) msg.data;
+                room = ServerMain.gameManager.createRoom(code);
+                room.players.add(this);
+                username = msg.sender;
+                send(new Message(MessageType.ROOM_JOINED, "SERVER", room.code));
+                break;
+            case JOIN_ROOM:
+                code = (String) msg.data;
+                GameRoom joinRoom = ServerMain.gameManager.getRoom(code);
+                if (joinRoom != null) {
+                    room = joinRoom;
+                    room.players.add(this);
+                    username = msg.sender;
+                    send(new Message(MessageType.ROOM_JOINED, "SERVER", code));
+                } else {
+                    send(new Message(MessageType.ROOM_ERROR, "SERVER", "Room not found"));
+                }
+                break;
+            case START_GAME:
+                room.gameStarted = true;
+                nextTurn();
+                break;
+            case SELECTED_WORD:
+                room.currentWord = (String) msg.data;
+                broadcastExcept(new Message(MessageType.CHAT_MESSAGE, "SERVER", "Clue: " + maskWord(room.currentWord)), this);
+                break;
+            case GUESS:
+                String guess = (String) msg.data;
+                if (guess.equalsIgnoreCase(room.currentWord)) {
+                    broadcast(new Message(MessageType.CORRECT_GUESS, msg.sender, guess));
+                } else {
+                    broadcast(new Message(MessageType.CHAT_MESSAGE, msg.sender, guess));
+                }
+                break;
+        }
+    }
+
+    private String maskWord(String word) {
+        return word.replaceAll(".", "_");
+    }
+
+    private void broadcast(Message msg) throws IOException {
+        for (ClientHandler player : room.players) {
+            player.send(msg);
+        }
+    }
+
+    private void broadcastExcept(Message msg, ClientHandler except) throws IOException {
+        for (ClientHandler player : room.players) {
+            if (player != except) player.send(msg);
+        }
+    }
+
+    private void nextTurn() throws IOException {
+        ClientHandler drawer = room.getNextDrawer();
+        List<String> words = room.wordGenerator.getRandomWords(3);
+        drawer.send(new Message(MessageType.DRAW_PROMPT, "SERVER", words));
     }
 }

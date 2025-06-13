@@ -10,8 +10,7 @@ package shared;
 
 
 public class GameConstants {
-
-    public static final int SERVER_PORT = 12345; // Server port number
-    public static final int TIMER_DURATION = 90; // Duration of each round in seconds
-    
+    public static final int DEFAULT_ROUNDS = 2;
+    public static final int DRAW_TIME = 60; // seconds
+    public static final int MIN_PLAYERS = 2;
 }

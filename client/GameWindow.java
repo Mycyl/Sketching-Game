@@ -1,15 +1,20 @@
 package client;
 
-/**
- * Main GUI window for the game.
- * Contains the drawing area, chat, and word display panels.
- * Uses Java Swing for layout and component management.
- */
+import javax.swing.*;
+import java.awt.*;
 
-// instance class
-// Manages the entire UI for the client (JFrame + panels).
+public class GameWindow extends JFrame {
+    public GameWindow() {
+        setTitle("Online Pictionary");
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setSize(1000, 700);
 
+        DrawingPanel drawingPanel = new DrawingPanel();
+        ChatPanel chatPanel = new ChatPanel();
 
-public class GameWindow {
-    
+        add(drawingPanel, BorderLayout.CENTER);
+        add(chatPanel, BorderLayout.EAST);
+
+        setVisible(true);
+    }
 }

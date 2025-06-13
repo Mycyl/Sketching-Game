@@ -15,32 +15,30 @@ import java.io.IOException;
 // static class or singleton
 // Generates or fetches words for each round.
 
+import java.io.*;
+import java.util.*;
+
 public class WordGenerator {
-    
-    private static final String path = "assets/words.txt";
+    private List<String> words;
+    private Random random;
 
-    private WordGenerator() {}
-
-    private static ArrayList<String> parseWords () {
-
-        ArrayList<String> words = new ArrayList<>();
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(path))) {
+    public WordGenerator(String filepath) throws IOException {
+        words = new ArrayList<>();
+        try (BufferedReader br = new BufferedReader(new FileReader(filepath))) {
             String line;
-            while ((line = reader.readLine()) != null) {
-                words.add(line);
+            while ((line = br.readLine()) != null) {
+                words.add(line.trim());
             }
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
         }
-        
-        return words;
+        random = new Random();
     }
 
-    public static List<String> getRandomWords(int count) {
-        List<String> copy = new ArrayList<>(parseWords());
-        Collections.shuffle(copy);
-        return copy.subList(0, count);
+    public List<String> getRandomWords(int count) {
+        List<String> selection = new ArrayList<>();
+        Collections.shuffle(words);
+        for (int i = 0; i < count && i < words.size(); i++) {
+            selection.add(words.get(i));
+        }
+        return selection;
     }
-
 }

@@ -1,15 +1,26 @@
 package client;
+import javax.swing.*;
+import java.awt.*;
 
-/**
- * Panel for displaying and sending chat messages.
- * Shows player guesses and system messages.
- * Sends chat input to the server and displays incoming messages.
- */
+public class ChatPanel extends JPanel {
+    private JTextArea chatArea;
+    private JTextField inputField;
 
-// instance class
-// Extends JPanel; handles chat input and display.
+    public ChatPanel() {
+        setLayout(new BorderLayout());
+        chatArea = new JTextArea();
+        chatArea.setEditable(false);
+        inputField = new JTextField();
 
+        add(new JScrollPane(chatArea), BorderLayout.CENTER);
+        add(inputField, BorderLayout.SOUTH);
+    }
 
-public class ChatPanel {
-    
+    public void appendMessage(String message) {
+        chatArea.append(message + "\n");
+    }
+
+    public JTextField getInputField() {
+        return inputField;
+    }
 }

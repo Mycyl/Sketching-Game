@@ -1,13 +1,8 @@
 package client;
-
-/**
- * Entry point for the client-side application.
- * Connects to the game server and launches the game window.
- */
-
- // static class
-// Contains the main() method to launch the client application.
+import javax.swing.*;
 
 public class ClientMain {
-    
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new GameWindow());
+    }
 }

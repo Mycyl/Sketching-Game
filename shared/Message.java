@@ -1,28 +1,16 @@
 package shared;
 
-/**
- * Serializable object used to transfer data between client and server.
- * Can encapsulate chat messages, drawing commands, player actions, etc.
- */
+import java.io.Serializable;
+import java.util.Map;
 
-// instance class
-// Serializable object for transferring game events/data.
+public class Message implements Serializable {
+    public MessageType type;
+    public String sender;
+    public Object data;
 
-public class Message {
-
-    private String type; // Type of message (e.g., "chat", "draw", "action")
-    private String content; // Content of the message (e.g., text, drawing data)
-
-    public Message (String type, String content) {
+    public Message(MessageType type, String sender, Object data) {
         this.type = type;
-        this.content = content;
+        this.sender = sender;
+        this.data = data;
     }
-
-    public String toString () {
-        return "Message{" +
-                "type='" + type + '\'' +
-                ", content='" + content + '\'' +
-                '}';
-    }
-    
 }
